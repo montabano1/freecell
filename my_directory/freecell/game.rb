@@ -17,32 +17,28 @@ class Game
       starting_idx = gets.chomp
 
       if starting_idx == 'F' || starting_idx == 'f'
-        location = 'X'
+        location = 'Y'
       else
         starting_pile = board.piles[starting_idx.to_i]
-        puts "Choose how far from top to start pile (choose 0 if choosing top card)"
-        amt_from_top = gets.chomp.to_i
-        puts "Choose a location ('F' = Foundations, 'C' = Freecell, 'B' = Board)"
+        puts "Choose a location ('X' = Foundations, 'F' = Freecell, 'B' = Board)"
         location = gets.chomp
       end
 
-      if location.upcase == 'C'
+      if location.upcase == 'F'
         puts "Choose a Freecell index (0-3)"
         freecell_index = gets.chomp.to_i
-        if amt_from_top == 0
-          board.move_to_freecell(starting_pile, freecell_index)
-        end
-      elsif location.upcase == 'F'
-        puts "Choose a Foundations index (0-3)"
-        foundations_index = gets.chomp.to_i
-        if amt_from_top == 0
-          board.move_to_foundations(starting_pile, foundations_index)
+        board.move_to_freecell(starting_pile, freecell_index)
+      elsif location.upcase == 'X'
+        (0..3).to_a.each do |num|
+          if board.valid_foundations_move?(starting_pile.last, num)
+            board.move_to_foundations(starting_pile, num)
+          end
         end
       elsif location.upcase == 'B'
         puts "Choose a receiving pile (0-7)"
         receiving_pile = gets.chomp.to_i
-        board.move_piles(board.piles.index(starting_pile), amt_from_top, receiving_pile)
-      elsif location.upcase == 'X'
+        board.move_piles(board.piles.index(starting_pile), receiving_pile)
+      elsif location.upcase == 'Y'
         puts "pick a Freecell index (0-3)"
         freecell_index = gets.chomp.to_i
         puts "pick a pile (0-7)"
@@ -56,9 +52,9 @@ class Game
   def render
     system('clear')
     puts ''
-    puts '          FREECELLS                                    FOUNDATIONS'
-    puts '    0      1      2      3                     0      1      2      3'
-    puts "   |#{board.freecells[0]}|   |#{board.freecells[1]}|   |#{board.freecells[2]}|   |#{board.freecells[3]}|                 |#{board.foundations[0].to_s}|   |#{board.foundations[1].to_s}|   |#{board.foundations[2].to_s}|   |#{board.foundations[3].to_s}|"
+    puts '           FREECELLS                                   FOUNDATIONS'
+    puts '     0      1      2      3                      0      1      2      3'
+    puts "    | #{board.freecells[0][0].to_s} |   | #{board.freecells[1][0].to_s} |   | #{board.freecells[2][0].to_s} |   | #{board.freecells[3][0].to_s} |                   |#{board.foundations[0][0].to_s}|   |#{board.foundations[1][0].to_s}|   |#{board.foundations[2][0].to_s}|   |#{board.foundations[3][0].to_s}|"
     puts ""
     puts ""
     puts '          BOARD '
@@ -73,7 +69,6 @@ class Game
   end
 
   def won?
-    # debugger
     board.foundations.all? {|fc| fc.is_a?(Card) && fc.value == :king}
   end
 end

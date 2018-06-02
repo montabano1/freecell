@@ -1,6 +1,5 @@
 require_relative 'card.rb'
 require_relative 'deck.rb'
-require 'byebug'
 
 class Board
 
@@ -46,13 +45,13 @@ class Board
     if [:clubs, :spades].include?(card1.suit)
       return false if [:clubs, :spades].include?(card2.suit)
     else
-      return false if [:hearts, :diamonds].include?(receiver.suit)
+      return false if [:hearts, :diamonds].include?(card2.suit)
     end
   end
 
-  def valid_board_move?(pile_moved, receiver)
-    return false unless different_color?(pile_moved.first, receiver)
-    return false unless one_value_bigger?(pile_moved.first, receiver)
+  def valid_board_move?(card, receiver)
+    return false unless different_color?(card, receiver)
+    return false unless one_value_bigger?(card, receiver)
     true
   end
 
@@ -63,33 +62,18 @@ class Board
   def valid_foundations_move?(card, foundations_index)
     return true if @foundations[foundations_index].empty? && card.value == :ace
     return false if @foundations[foundations_index].empty?
-    return false unless one_value_bigger?(@foundations[foundations_index], card)
-    return false unless @foundations[foundations_index].suit == card.suit
+    return false unless one_value_bigger?(@foundations[foundations_index][0], card)
+    return false unless @foundations[foundations_index][0].suit == card.suit
     true
   end
 
-  def choose_multiple_cards(amt_from_top, pile) #first card is 0 from top
-    i = pile.length - amt_from_top - 1
-    while i < pile.length - 1
-      unless different_color?(pile[i], pile[i+1])
-        puts "that is not a valid choice"
-        break
-      end
-      i += 1
-    end
-    pile[pile.length - amt_from_top - 1..-1]
-  end
-
-  def move_piles(from_pile_idx, amt_from_top, to_pile_idx)
-    @piles[to_pile_idx] += choose_multiple_cards(amt_from_top, @piles[from_pile_idx])
-    (amt_from_top+ 1).times do @piles[from_pile_idx].pop
-    end
+  def move_piles(from_pile_idx, to_pile_idx)
+    @piles[to_pile_idx] << @piles[from_pile_idx].pop
   end
 
   def move_to_freecell(pile, freecell_index)
     if valid_freecell_move?(freecell_index)
-      @freecells[freecell_index] = pile.last
-      pile.pop
+      @freecells[freecell_index] = [pile.pop]
     else
       puts "that space is not free"
     end
@@ -98,14 +82,13 @@ class Board
   def move_to_foundations(pile, foundations_index)
     if @foundations[foundations_index] == []
       if pile.last.value == :ace
-        @foundations[foundations_index] = pile.pop
+        @foundations[foundations_index] = [pile.pop]
         return nil
       end
     end
 
     if valid_foundations_move?(pile.last, foundations_index)
-      @foundations[foundations_index] += pile.last
-      pile.pop
+      @foundations[foundations_index] = [pile.pop]
     else
       puts "invalid foundations move"
     end
